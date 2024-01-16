@@ -6,7 +6,7 @@ TinyGPSPlus gps;
 HardwareSerial gpsSerial(1); // Assuming GPS is connected to Serial1
 
 void setup() {
-    M5.begin();           // Init M5Stack.  初始化M5Stack
+    M5.begin();           // Init M5Stack.  
     WiFi.mode(WIFI_STA);  // Set WiFi to station mode and disconnect from an AP
     WiFi.disconnect();    // Turn off all wifi connections.
     delay(100);           // 100 ms delay.
