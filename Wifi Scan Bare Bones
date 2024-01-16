@@ -1,0 +1,58 @@
+#include <M5Core2.h>
+#include "WiFi.h"
+#include <TinyGPS++.h>
+
+TinyGPSPlus gps;
+HardwareSerial gpsSerial(1); // Assuming GPS is connected to Serial1
+
+void setup() {
+    M5.begin();           // Init M5Stack.  
+    WiFi.mode(WIFI_STA);  // Set WiFi to station mode and disconnect from an AP
+                          // if it was previously connected.
+    WiFi.disconnect();    // Turn off all wifi connections.
+    delay(100);           // 100 ms delay.
+    M5.Lcd.print("WIFI SCAN");
+
+    gpsSerial.begin(9600, SERIAL_8N1, 16, 17); // Change pins according to your wiring
+}
+
+void loop() {
+    while (gpsSerial.available() > 0) {
+        if (gps.encode(gpsSerial.read())) {
+            // GPS data processing
+        }
+    }
+
+    M5.Lcd.setCursor(0, 0);
+    M5.Lcd.println("WARDRIVE THE PLANET by @Ringmast4r");
+    M5.update();
+
+    if (M5.BtnA.isPressed()) {
+        M5.Lcd.clear();
+        M5.Lcd.print("Scanning...\n");
+
+        if (gps.location.isValid()) {
+            M5.Lcd.printf("Lat: %f\n", gps.location.lat());
+            M5.Lcd.printf("Lng: %f\n", gps.location.lng());
+            M5.Lcd.printf("Satellites: %d\n", gps.satellites.value());
+            M5.Lcd.printf("HDOP: %f\n", gps.hdop.value());
+        } else {
+            M5.Lcd.println("GPS not fixed");
+        }
+
+        int n = WiFi.scanNetworks();
+        if (n == 0) {
+            M5.Lcd.println("No networks found");
+        } else {
+            M5.Lcd.printf("%d networks found\n\n", n);
+            for (int i = 0; i < n; ++i) {
+                M5.Lcd.printf("%d: BSSID: %s, SSID: %s, Signal: %d dBm\n",
+                              i + 1,
+                              WiFi.BSSIDstr(i).c_str(),
+                              WiFi.SSID(i).c_str(),
+                              WiFi.RSSI(i));
+            }
+        }
+        delay(1000); // Delay before next scan
+    }
+}
