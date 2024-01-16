@@ -1,0 +1,47 @@
+#include "M5StickCPlus2.h"
+#include <TinyGPS++.h>
+#include <time.h>
+
+HardwareSerial GPSSerial(1); // Use the second hardware serial port for GPS
+TinyGPSPlus gps;
+
+void setup() {
+  M5.begin();
+  GPSSerial.begin(9600, SERIAL_8N1, 32, -1); // GPS RX pin is 32
+  M5.Lcd.setRotation(3);
+  M5.Lcd.setTextSize(2); // Increased font size
+  M5.Lcd.setTextColor(TFT_BLUE, TFT_BLACK); // Changed font color to blue
+}
+
+void loop() {
+  M5.Lcd.fillScreen(TFT_BLACK);
+  M5.Lcd.setCursor(0, 0);
+
+  // Display Time in 12-hour format
+  char timeStr[20];
+  time_t now;
+  struct tm timeinfo;
+  time(&now);
+  localtime_r(&now, &timeinfo);
+
+  // Convert to 12-hour format
+  int hour12 = timeinfo.tm_hour % 12;
+  if (hour12 == 0) {
+    hour12 = 12; // Midnight (12:00 AM)
+  }
+  
+  // Display Time
+  sprintf(timeStr, "%02d:%02d:%02d %s", hour12, timeinfo.tm_min, timeinfo.tm_sec, (timeinfo.tm_hour >= 12) ? "PM" : "AM");
+  M5.Lcd.println(timeStr);
+
+  // Display Satellites
+  M5.Lcd.print("Sats: ");
+  M5.Lcd.println(gps.satellites.value());
+
+  // Display "Waiting for GPS data" if no GPS lock
+  if (!gps.location.isValid()) {
+    M5.Lcd.println("Waiting for GPS data...");
+  }
+
+  delay(1000); // Update every 1 second
+}
