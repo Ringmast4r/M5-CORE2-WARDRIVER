@@ -1,0 +1,75 @@
+#include <M5Core2.h>
+#include "WiFi.h"
+#include <TinyGPS++.h>
+#include <SD.h>
+#include <FS.h>
+
+TinyGPSPlus gps;
+HardwareSerial gpsSerial(1); // Assuming GPS is connected to Serial1
+
+void setup() {
+    M5.begin();
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    delay(100);
+    M5.Lcd.print("WIFI SCAN");
+
+    gpsSerial.begin(9600, SERIAL_8N1, 16, 17); // Adjust for your GPS wiring
+
+    if (!SD.begin()) {
+        M5.Lcd.println("SD Card Mount Failed");
+        return;
+    }
+    M5.Lcd.println("SD Card Initialized");
+}
+
+void loop() {
+    while (gpsSerial.available() > 0) {
+        if (gps.encode(gpsSerial.read())) {
+            // GPS data is being processed here
+        }
+    }
+
+    M5.Lcd.setCursor(0, 0);
+    M5.Lcd.println("WARDRIVE THE PLANET by @Ringmast4r");
+    M5.update();
+
+    if (M5.BtnA.isPressed()) {
+        M5.Lcd.clear();
+        M5.Lcd.print("Scanning...\n");
+
+        String dataString = ""; // String to accumulate data for SD write
+
+        if (gps.location.isValid()) {
+            dataString += "Lat: " + String(gps.location.lat(), 6) + ", ";
+            dataString += "Lng: " + String(gps.location.lng(), 6) + ", ";
+            dataString += "Sats: " + String(gps.satellites.value()) + ", ";
+            dataString += "HDOP: " + String(gps.hdop.value()) + "\n";
+        } else {
+            dataString += "GPS not fixed\n";
+        }
+
+        int n = WiFi.scanNetworks();
+        if (n == 0) {
+            dataString += "No networks found\n";
+        } else {
+            dataString += String(n) + " networks found\n";
+            for (int i = 0; i < n; ++i) {
+                dataString += "Net " + String(i + 1) + ": ";
+                dataString += WiFi.BSSIDstr(i) + ", ";
+                dataString += WiFi.SSID(i) + ", ";
+                dataString += String(WiFi.RSSI(i)) + " dBm\n";
+            }
+        }
+
+        File file = SD.open("/ScanData.txt", FILE_APPEND);
+        if (file) {
+            file.println(dataString);
+            file.close();
+            M5.Lcd.println("Data saved to SD");
+        } else {
+            M5.Lcd.println("Failed to write to SD");
+        }
+        delay(1000); // Delay before next scan
+    }
+}
