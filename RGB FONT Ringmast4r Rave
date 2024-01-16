@@ -1,0 +1,64 @@
+#include <M5Core2.h>
+#include "WiFi.h"
+#include <TinyGPS++.h>
+
+TinyGPSPlus gps;
+HardwareSerial gpsSerial(1);
+
+void drawMulticolorText(String text, int x, int y) {
+    int cursorX = x;
+    for (unsigned int i = 0; i < text.length(); i++) {
+        uint32_t color = random(0xFFFFFF);
+        M5.Lcd.setTextColor(color);
+        char str[2] = {text[i], '\0'};
+        M5.Lcd.drawChar(str[0], cursorX, y, 2);
+        cursorX += M5.Lcd.textWidth(str, 2);
+    }
+}
+
+void setup() {
+    M5.begin();
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    delay(100);
+    M5.Lcd.print("WIFI SCAN");
+    gpsSerial.begin(9600, SERIAL_8N1, 16, 17);
+}
+
+void loop() {
+    while (gpsSerial.available() > 0) {
+        if (gps.encode(gpsSerial.read())) {
+            // GPS data processing
+        }
+    }
+
+    M5.Lcd.setCursor(0, 0);
+    drawMulticolorText("WARDRIVE THE PLANET by @Ringmast4r", 0, 0);
+    M5.update();
+
+    if (M5.BtnA.isPressed()) {
+        M5.Lcd.clear();
+        drawMulticolorText("Scanning...", 0, 20);
+
+        if (gps.location.isValid()) {
+            drawMulticolorText("Lat: " + String(gps.location.lat(), 6), 0, 40);
+            drawMulticolorText("Lng: " + String(gps.location.lng(), 6), 0, 60);
+            drawMulticolorText("Satellites: " + String(gps.satellites.value()), 0, 80);
+            drawMulticolorText("HDOP: " + String(gps.hdop.value()), 0, 100);
+        } else {
+            drawMulticolorText("GPS not fixed", 0, 40);
+        }
+
+        int n = WiFi.scanNetworks();
+        if (n == 0) {
+            drawMulticolorText("No networks found", 0, 120);
+        } else {
+            drawMulticolorText(String(n) + " networks found", 0, 120);
+            for (int i = 0; i < n; ++i) {
+                String netInfo = String(i + 1) + ": BSSID: " + WiFi.BSSIDstr(i) + ", SSID: " + WiFi.SSID(i) + ", Signal: " + String(WiFi.RSSI(i)) + " dBm";
+                drawMulticolorText(netInfo, 0, 140 + i*20);
+            }
+        }
+        delay(1000); // Delay before next scan
+    }
+}
