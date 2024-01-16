@@ -1,0 +1,70 @@
+#include <M5Core2.h>
+#include "WiFi.h"
+#include <TinyGPS++.h>
+
+TinyGPSPlus gps;
+HardwareSerial gpsSerial(1);
+
+void drawMulticolorText(String text, int x, int y) {
+    int cursorX = x;
+    for (unsigned int i = 0; i < text.length(); i++) {
+        uint32_t color = random(0xFFFFFF);
+        M5.Lcd.setTextColor(color);
+        char str[2] = {text[i], '\0'};
+        M5.Lcd.drawChar(str[0], cursorX, y, 2);
+        cursorX += M5.Lcd.textWidth(str, 2);
+    }
+}
+
+void setup() {
+    M5.begin();
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    delay(100);
+    M5.Lcd.print("WIFI SCAN");
+    gpsSerial.begin(9600, SERIAL_8N1, 16, 17);
+
+    // Draw the static text only once
+    drawMulticolorText("WARDRIVE THE PLANET by @Ringmast4r", 0, 0);
+}
+
+void loop() {
+    while (gpsSerial.available() > 0) {
+        if (gps.encode(gpsSerial.read())) {
+            // GPS data processing
+        }
+    }
+
+    M5.update();
+
+    if (M5.BtnA.isPressed()) {
+        M5.Lcd.clear();
+        drawMulticolorText("WARDRIVE THE PLANET by @Ringmast4r", 0, 0); // Redraw static text
+        drawMulticolorText("Scanning...", 0, 20);
+
+        // GPS Data
+        if (gps.location.isValid()) {
+            drawMulticolorText("Lat: " + String(gps.location.lat(), 6), 0, 40);
+            drawMulticolorText("Lng: " + String(gps.location.lng(), 6), 0, 60);
+            drawMulticolorText("Satellites: " + String(gps.satellites.value()), 0, 80);
+            drawMulticolorText("HDOP: " + String(gps.hdop.value()), 0, 100);
+        } else {
+            drawMulticolorText("GPS not fixed", 0, 40);
+        }
+
+        // WiFi Scan
+        int n = WiFi.scanNetworks();
+        if (n == 0) {
+            drawMulticolorText("No networks found", 0, 120);
+        } else {
+            drawMulticolorText(String(n) + " networks found", 0, 120);
+            int yPos = 140;
+            for (int i = 0; i < n; ++i) {
+                String netInfo = String(i + 1) + ": " + WiFi.SSID(i) + " (" + WiFi.RSSI(i) + " dBm)";
+                drawMulticolorText(netInfo, 0, yPos);
+                yPos += 20; // Adjust the y position for each network
+            }
+        }
+        delay(1000); // Delay before next scan
+    }
+}
