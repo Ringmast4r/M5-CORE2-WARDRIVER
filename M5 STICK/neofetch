@@ -1,0 +1,72 @@
+#include <M5StickCPlus2.h>
+#include <WiFi.h>
+#include <esp_system.h>
+#include <esp_idf_version.h>
+
+int currentColor = TFT_BLACK; // Initialize to black
+
+void setup() {
+  M5.begin();
+  M5.Lcd.fillScreen(currentColor); // Initialize with the current color
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.setCursor(0, 0);
+  M5.Lcd.setTextColor(TFT_WHITE);
+  M5.Lcd.println("M5StickC Plus2 System Info");
+
+  float voltage = 0.0; // Initialize to 0
+  int percentage = 0;  // Initialize to 0
+
+  // Attempt to retrieve battery information
+  voltage = M5.Power.getBatteryVoltage();
+  percentage = M5.Power.getBatteryLevel();
+
+  M5.Lcd.setTextSize(1);
+  M5.Lcd.print("Battery Voltage: ");
+  M5.Lcd.print(voltage);
+  M5.Lcd.print("V  ");
+  M5.Lcd.print("Battery Percentage: ");
+  M5.Lcd.print(percentage);
+  M5.Lcd.println("%");
+
+  // Display Wi-Fi network information
+  int numNetworks = WiFi.scanNetworks();
+  M5.Lcd.setTextSize(1);
+  M5.Lcd.print("Available Wi-Fi Networks: ");
+  M5.Lcd.println(numNetworks);
+
+  // Additional System Information
+  M5.Lcd.print("CPU Temperature: ");
+  M5.Lcd.print(getCPUTemperature());
+  M5.Lcd.println("°F"); // Display in Fahrenheit
+
+  M5.Lcd.print("CPU Frequency: ");
+  M5.Lcd.print(getCPUFrequency()); // Display in megahertz
+  M5.Lcd.println(" MHz");
+
+  M5.Lcd.print("Kernel: ");
+  M5.Lcd.println(esp_get_idf_version());
+
+  M5.Lcd.print("Runtime: ");
+  M5.Lcd.print(millis() / 1000);
+  M5.Lcd.println(" seconds");
+}
+
+void loop() {
+  // Check for a button press event
+  if (M5.BtnA.wasPressed() || M5.BtnB.wasPressed() || M5.BtnC.wasPressed()) {
+    changeColor(); // Change the display color
+  }
+}
+
+float getCPUTemperature() {
+  return (temperatureRead() * 9.0 / 5.0) + 32; // Convert to Fahrenheit
+}
+
+uint32_t getCPUFrequency() {
+  return getCpuFrequencyMhz();
+}
+
+void changeColor() {
+  currentColor = random(0xFFFFFF); // Generate a random color (excluding black)
+  M5.Lcd.fillScreen(currentColor); // Set the screen background to the random color
+}
