@@ -1,0 +1,47 @@
+#include <M5StickCPlus2.h>
+#include <WiFi.h>
+
+int totalNetworkCount = 0; // Count of all Wi-Fi networks seen
+int backgroundColor = TFT_BLACK;
+
+void setup() {
+  M5.begin();
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.fillScreen(backgroundColor);
+  M5.Lcd.setTextColor(TFT_WHITE);
+  M5.Lcd.setTextDatum(MC_DATUM); // Center-align text
+  M5.Lcd.setRotation(0); // Rotate screen to normal orientation
+  Serial.begin(115200);
+  delay(1000); // Delay to ensure initialization is complete
+}
+
+void loop() {
+  scanWiFiNetworks(); // Perform a Wi-Fi scan
+
+  // Change background color when a new network is detected
+  if (totalNetworkCount > 0) {
+    backgroundColor = getRandomColor();
+    M5.Lcd.fillScreen(backgroundColor);
+  }
+
+  // Display "WIFI SEEN" with the total network count
+  displayTotalNetworkCount();
+
+  delay(5000); // Delay between scans (lower refresh rate)
+}
+
+void scanWiFiNetworks() {
+  totalNetworkCount += WiFi.scanNetworks(); // Add the count of newly scanned networks
+}
+
+void displayTotalNetworkCount() {
+  M5.Lcd.setTextSize(4);
+  M5.Lcd.setTextColor(TFT_WHITE);
+  M5.Lcd.setTextDatum(MC_DATUM);
+  M5.Lcd.setCursor(160, 120);
+  M5.Lcd.printf("WIFI SEEN: %d", totalNetworkCount);
+}
+
+int getRandomColor() {
+  return random(0xFFFFFF); // Generate a random color (excluding black)
+}
