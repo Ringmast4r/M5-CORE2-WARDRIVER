@@ -1,13 +1,16 @@
 #include <M5StickCPlus2.h>
 #include <WiFi.h>
+#include <set> // Include the set library
 
-int totalNetworkCount = 0; // Count of all Wi-Fi networks seen
+std::set<String> scannedNetworks; // Set to store SSIDs of scanned networks
+int totalNetworkCount = 0;
 int backgroundColor = TFT_BLACK;
+int initialColor = TFT_BLUE; // Initial color to indicate power on
 
 void setup() {
   M5.begin();
   M5.Lcd.setTextSize(2);
-  M5.Lcd.fillScreen(backgroundColor);
+  M5.Lcd.fillScreen(initialColor); // Fill screen with initial color
   M5.Lcd.setTextColor(TFT_WHITE);
   M5.Lcd.setTextDatum(MC_DATUM); // Center-align text
   M5.Lcd.setRotation(0); // Rotate screen to normal orientation
@@ -31,7 +34,14 @@ void loop() {
 }
 
 void scanWiFiNetworks() {
-  totalNetworkCount += WiFi.scanNetworks(); // Add the count of newly scanned networks
+  int networkCount = WiFi.scanNetworks(); // Count of networks found in the current scan
+  for (int i = 0; i < networkCount; ++i) {
+    String ssid = WiFi.SSID(i);
+    if (scannedNetworks.find(ssid) == scannedNetworks.end()) { // Check if the SSID is new
+      scannedNetworks.insert(ssid); // Add the new SSID to the set
+      totalNetworkCount++; // Only increment if the network is new
+    }
+  }
 }
 
 void displayTotalNetworkCount() {
