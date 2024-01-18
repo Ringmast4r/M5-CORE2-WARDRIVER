@@ -6,6 +6,7 @@ std::set<String> scannedNetworks; // Set to store SSIDs of scanned networks
 int totalNetworkCount = 0;
 int backgroundColor = TFT_BLACK;
 int initialColor = TFT_BLUE; // Initial color to indicate power on
+bool isNewNetworkFound = false; // Flag to check if a new network is found
 
 void setup() {
   M5.begin();
@@ -21,10 +22,11 @@ void setup() {
 void loop() {
   scanWiFiNetworks(); // Perform a Wi-Fi scan
 
-  // Change background color when a new network is detected
-  if (totalNetworkCount > 0) {
+  // Change background color only if a new network is found
+  if (isNewNetworkFound) {
     backgroundColor = getRandomColor();
     M5.Lcd.fillScreen(backgroundColor);
+    isNewNetworkFound = false; // Reset the flag
   }
 
   // Display "WIFI SEEN" with the total network count
@@ -39,7 +41,8 @@ void scanWiFiNetworks() {
     String ssid = WiFi.SSID(i);
     if (scannedNetworks.find(ssid) == scannedNetworks.end()) { // Check if the SSID is new
       scannedNetworks.insert(ssid); // Add the new SSID to the set
-      totalNetworkCount++; // Only increment if the network is new
+      totalNetworkCount++; // Increment as the network is new
+      isNewNetworkFound = true; // Set flag as new network is found
     }
   }
 }
