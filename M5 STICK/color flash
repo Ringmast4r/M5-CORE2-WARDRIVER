@@ -1,0 +1,13 @@
+#include <M5StickCPlus2.h>
+
+void setup() {
+  M5.begin();
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.fillScreen(TFT_BLACK);
+}
+
+void loop() {
+  int randomColor = random(0xFFFFFF); // Generate a random color (excluding black)
+  M5.Lcd.fillScreen(randomColor); // Set the screen background to the random color
+  delay(1000); // Delay for one second
+}
