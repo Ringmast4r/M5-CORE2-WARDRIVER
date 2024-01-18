@@ -1,0 +1,26 @@
+#include <M5StickCPlus2.h>
+
+void setup() {
+  M5.begin();
+  Serial.begin(115200);
+  pinMode(37, INPUT); // Assuming GPIO 37 for HOME button
+  pinMode(35, INPUT); // Assuming GPIO 39 for POWER button
+
+  Serial.println("M5StickCPlus2 Button Test");
+}
+
+void loop() {
+  // Check HOME button
+  if (digitalRead(37) == LOW) {
+    Serial.println("HOME button pressed");
+    delay(500); // Simple debounce
+  }
+
+  // Check POWER button
+  if (digitalRead(35) == LOW) {
+    Serial.println("POWER button pressed");
+    delay(500); // Simple debounce
+  }
+
+  // RESET button can't be checked in software as it restarts the device
+}
