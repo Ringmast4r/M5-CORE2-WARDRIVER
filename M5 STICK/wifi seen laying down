@@ -1,0 +1,70 @@
+#include <M5StickCPlus2.h>
+#include <WiFi.h>
+#include <set> // Include the set library
+
+std::set<String> scannedNetworks; // Set to store SSIDs of scanned networks
+int totalNetworkCount = 0;
+int backgroundColor = TFT_BLACK;
+int initialColor = TFT_BLUE; // Initial color to indicate power on
+bool isNewNetworkFound = false; // Flag to check if a new network is found
+
+void setup() {
+  M5.begin();
+  M5.Lcd.setTextSize(4); // Set larger text size
+  M5.Lcd.fillScreen(initialColor); // Fill screen with initial color
+  M5.Lcd.setTextColor(TFT_WHITE);
+  M5.Lcd.setTextDatum(MC_DATUM); // Center-align text
+  M5.Lcd.setRotation(3); // Rotate screen for vertical orientation
+  Serial.begin(115200);
+  delay(1000); // Delay to ensure initialization is complete
+}
+
+void loop() {
+  scanWiFiNetworks(); // Perform a Wi-Fi scan
+
+  // Change background color only if a new network is found
+  if (isNewNetworkFound) {
+    backgroundColor = getRandomColor();
+    M5.Lcd.fillScreen(backgroundColor);
+    isNewNetworkFound = false; // Reset the flag
+  }
+
+  // Display "WIFI SEEN" with the total network count
+  displayTotalNetworkCount();
+
+  delay(5000); // Delay between scans (lower refresh rate)
+}
+
+void scanWiFiNetworks() {
+  int networkCount = WiFi.scanNetworks(); // Count of networks found in the current scan
+  for (int i = 0; i < networkCount; ++i) {
+    String ssid = WiFi.SSID(i);
+    if (scannedNetworks.find(ssid) == scannedNetworks.end()) { // Check if the SSID is new
+      scannedNetworks.insert(ssid); // Add the new SSID to the set
+      totalNetworkCount++; // Increment as the network is new
+      isNewNetworkFound = true; // Set flag as new network is found
+    }
+  }
+}
+
+void displayTotalNetworkCount() {
+  M5.Lcd.setTextSize(4); // Set a larger text size for better readability
+  M5.Lcd.setTextColor(TFT_WHITE);
+  M5.Lcd.setTextDatum(MC_DATUM);
+
+  // Print "WIFI SEEN" on the first line
+  M5.Lcd.setCursor(10, 20);
+  M5.Lcd.print("WIFI SEEN");
+
+  // Calculate center position for the count number
+  int centerX = (M5.Lcd.width() - (6 * 12)) / 2; // Adjust '6 * 12' based on estimated character width
+  int centerY = M5.Lcd.height() / 2;
+
+  // Print the count number centered on the screen
+  M5.Lcd.setCursor(centerX, centerY);
+  M5.Lcd.printf("%d", totalNetworkCount);
+}
+
+int getRandomColor() {
+  return random(0xFFFFFF); // Generate a random color (excluding black)
+}
