@@ -1,0 +1,51 @@
+#include <M5Core2.h>
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+
+// Define the matrix code characters
+char matrixChars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+int charCount = sizeof(matrixChars) - 1;
+
+// Define the Matrix code properties
+int fontSize = 10;
+int streamCount = 20; // Number of streams
+int streamSpeed = 1;  // Speed of the streams
+
+// Define an array to store stream positions
+int streamPositions[20];
+
+void setup() {
+  M5.begin();
+  M5.Lcd.fillScreen(TFT_BLACK);
+  M5.Lcd.setTextSize(fontSize);
+  
+  // Initialize stream positions randomly
+  for (int i = 0; i < streamCount; i++) {
+    streamPositions[i] = random(SCREEN_WIDTH);
+  }
+}
+
+void loop() {
+  // Move and display the matrix streams
+  for (int i = 0; i < streamCount; i++) {
+    // Clear the previous character
+    M5.Lcd.setTextColor(TFT_BLACK);
+    M5.Lcd.drawString(String(matrixChars[random(charCount)]), streamPositions[i], i * fontSize);
+    
+    // Move the stream down
+    streamPositions[i] += streamSpeed;
+    
+    // Wrap around if the stream goes off-screen
+    if (streamPositions[i] >= SCREEN_WIDTH) {
+      streamPositions[i] = -fontSize;
+    }
+    
+    // Display the character at the new position
+    M5.Lcd.setTextColor(TFT_GREEN);
+    M5.Lcd.drawString(String(matrixChars[random(charCount)]), streamPositions[i], i * fontSize);
+  }
+  
+  delay(100); // Adjust the delay to control the animation speed
+}
+
