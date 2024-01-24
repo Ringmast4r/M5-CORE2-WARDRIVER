@@ -1,0 +1,67 @@
+#include <M5Core2.h>
+#include <vector>
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+
+// Define the Matrix code characters
+std::vector<char> matrixChars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+                                 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+                                 'u', 'v', 'w', 'x', 'y', 'z'};
+
+// Define the Matrix code properties
+int fontSize = 3; // Smaller font size
+int streamCount = SCREEN_WIDTH / fontSize;
+int streamSpeed = 5; // Increased stream speed
+
+// Define a structure to store stream positions and characters
+struct MatrixStream {
+  int x;
+  int y;
+  char character;
+};
+
+std::vector<MatrixStream> streams;
+
+void setup() {
+  M5.begin();
+  M5.Lcd.fillScreen(TFT_BLACK);
+  M5.Lcd.setTextSize(fontSize);
+  
+  // Initialize streams with random positions and characters
+  for (int i = 0; i < streamCount; i++) {
+    MatrixStream stream;
+    stream.x = random(SCREEN_WIDTH);
+    stream.y = random(SCREEN_HEIGHT);
+    stream.character = matrixChars[random(matrixChars.size())];
+    streams.push_back(stream);
+  }
+}
+
+void loop() {
+  // Clear the previous frame
+  for (const MatrixStream& stream : streams) {
+    M5.Lcd.setTextColor(TFT_BLACK);
+    M5.Lcd.drawString(String(stream.character), stream.x, stream.y);
+  }
+  
+  // Move and display the streams
+  for (MatrixStream& stream : streams) {
+    // Move the stream down
+    stream.y += streamSpeed;
+    
+    // Wrap around if the stream goes off-screen
+    if (stream.y >= SCREEN_HEIGHT) {
+      stream.y = 0;
+      stream.x = random(SCREEN_WIDTH);
+      stream.character = matrixChars[random(matrixChars.size())];
+    }
+    
+    // Display the character at the new position
+    M5.Lcd.setTextColor(TFT_GREEN);
+    M5.Lcd.drawString(String(stream.character), stream.x, stream.y);
+  }
+  
+  delay(50); // Adjust the delay to control the animation speed
+}
