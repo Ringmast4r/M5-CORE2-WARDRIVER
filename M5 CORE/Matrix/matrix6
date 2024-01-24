@@ -1,0 +1,69 @@
+#include <M5Core2.h>
+#include <vector>
+
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+
+std::vector<char> matrixChars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                                 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+                                 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+                                 'u', 'v', 'w', 'x', 'y', 'z'};
+
+int fontSize = 1; // Smallest font size
+int streamCount = SCREEN_WIDTH / fontSize;
+
+struct MatrixStream {
+  int x;
+  int y;
+  char character;
+  int speed; // Speed for each stream
+};
+
+std::vector<MatrixStream> streams;
+
+void setup() {
+  M5.begin();
+  M5.Lcd.fillScreen(TFT_BLACK);
+  M5.Lcd.setTextSize(fontSize);
+
+  for (int i = 0; i < streamCount; i++) {
+    MatrixStream stream;
+    stream.x = random(SCREEN_WIDTH);
+    stream.y = random(SCREEN_HEIGHT);
+    stream.character = matrixChars[random(matrixChars.size())];
+    stream.speed = random(1, 5); // Assign a random speed between 1 and 4
+    streams.push_back(stream);
+  }
+}
+
+void loop() {
+  // Display "BOOTING" in red at the middle of the screen with a larger and bold font
+  M5.Lcd.setTextColor(TFT_RED);
+  M5.Lcd.setTextDatum(TC_DATUM); // Set text alignment to center
+  M5.Lcd.setTextSize(3); // Set the text size to be larger
+  M5.Lcd.drawString("BOOTING", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+
+  // Set the text size back to the original size for the green text
+  M5.Lcd.setTextSize(fontSize);
+
+  for (const MatrixStream& stream : streams) {
+    M5.Lcd.setTextColor(TFT_BLACK);
+    M5.Lcd.drawString(String(stream.character), stream.x, stream.y);
+  }
+
+  for (MatrixStream& stream : streams) {
+    stream.y += stream.speed; // Use the assigned speed
+
+    if (stream.y >= SCREEN_HEIGHT) {
+      stream.y = 0;
+      stream.x = random(SCREEN_WIDTH);
+      stream.character = matrixChars[random(matrixChars.size())];
+      stream.speed = random(1, 5); // Assign a new random speed
+    }
+
+    M5.Lcd.setTextColor(TFT_GREEN);
+    M5.Lcd.drawString(String(stream.character), stream.x, stream.y);
+  }
+
+  delay(10); // Adjust the delay to control the animation speed
+}
